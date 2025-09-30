@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cielo Estrellado para Sarita</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2d1b69, #0f0f23);
+            color: white;
+            position: relative;
+            touch-action: manipulation;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Contenedor principal */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Fondo con estrellas decorativas */
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        /* Nebulosas */
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+        }
+
+        .nebula-1 {
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.6), transparent);
+            top: 10%;
+            left: 15%;
+        }
+
+        .nebula-2 {
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(75, 0, 130, 0.5), transparent);
+            bottom: 20%;
+            right: 10%;
+        }
+
+        .nebula-3 {
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(0, 0, 139, 0.4), transparent);
+            top: 40%;
+            left: 60%;
+        }
+
+        /* Estrellas principales */
+        .main-star {
+            position: absolute;
+            width: 8vw;
+            height: 8vw;
+            max-width: 40px;
+            max-height: 40px;
+            min-width: 25px;
+            min-height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 4vw;
+        }
+
+        @media (min-width: 768px) {
+            .main-star {
+                font-size: 16px;
+            }
+        }
+
+        .main-star.locked {
+            background: radial-gradient(circle, #888, #444);
+            box-shadow: 0 0 10px 2px rgba(100, 100, 100, 0.5);
+            color: #aaa;
+            cursor: default;
+        }
+
+        .main-star.unlocked {
+            background: radial-gradient(circle, #fff9c4, #ffeb3b);
+            box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.7);
+            animation: goldenGlow 3s infinite alternate;
+            color: #333;
+        }
+
+        .main-star.unlocked:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px 10px rgba(255, 235, 59, 0.9);
+        }
+
+        /* Posiciones de las estrellas principales */
+        #star1 { top: 20%; left: 15%; }
+        #star2 { top: 40%; left: 80%; }
+        #star3 { top: 70%; left: 25%; }
+        #star4 { top: 60%; left: 60%; }
+        #star5 { top: 30%; left: 45%; }
+        #star6 { top: 75%; left: 75%; }
+        #star7 { top: 15%; left: 70%; }
+
+        /* Indicaciones */
+        .instructions {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 4vw;
+            animation: float 3s infinite ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            z-index: 5;
+            padding: 0 10px;
+        }
+
+        @media (min-width: 768px) {
+            .instructions {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 15px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(to bottom right, #1a1a4a, #2d1b69);
+            border-radius: 15px;
+            padding: 20px;
+            width: 95%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 5vw;
+            color: #ffeb3b;
+        }
+
+        @media (min-width: 768px) {
+            .modal-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 6vw;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            width: 10vw;
+            height: 10vw;
+            max-width: 40px;
+            max-height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .close-btn {
+                font-size: 1.8rem;
+            }
+        }
+
+        .close-btn:hover {
+            color: #ffeb3b;
+        }
+
+        .modal-content {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 4vw;
+        }
+
+        @media (min-width: 768px) {
+            .modal-content {
+                font-size: 1rem;
+            }
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 30vh;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bible-verse {
+            font-style: italic;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #ffeb3b;
+            font-size: 3.5vw;
+        }
+
+        @media (min-width: 768px) {
+            .bible-verse {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes goldenGlow {
+            0% { box-shadow: 0 0 20px 5px rgba(255, 235, 59, 0.7); }
+            100% { box-shadow: 0 0 30px 10px rgba(255, 235, 59, 0.9); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Efecto de movimiento sutil para el fondo */
+        .moving-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBg 120s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes moveBg {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-50%) translateY(-50%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Instrucciones -->
+        <div class="instructions">Presiona las estrellas brillantes ✨</div>
+        
+        <!-- Fondo con movimiento sutil -->
+        <div class="moving-bg"></div>
+        
+        <!-- Cielo con estrellas decorativas -->
+        <div class="sky" id="sky"></div>
+        
+        <!-- Nebulosas -->
+        <div class="nebula nebula-1"></div>
+        <div class="nebula nebula-2"></div>
+        <div class="nebula nebula-3"></div>
+        
+        <!-- Estrellas principales -->
+        <div class="main-star locked" id="star1" data-day="1">1</div>
+        <div class="main-star locked" id="star2" data-day="2">2</div>
+        <div class="main-star locked" id="star3" data-day="3">3</div>
+        <div class="main-star locked" id="star4" data-day="4">4</div>
+        <div class="main-star locked" id="star5" data-day="5">5</div>
+        <div class="main-star locked" id="star6" data-day="6">6</div>
+        <div class="main-star locked" id="star7" data-day="7">7</div>
+        
+        <!-- Modal -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">Día 1</h2>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-content">
+                    <p id="modalMessage">Mensaje personalizado para este día.</p>
+                    <div class="bible-verse" id="modalVerse">"Porque tanto amó Dios al mundo que dio a su Hijo unigénito, para que todo el que cree en él no se pierda, sino que tenga vida eterna." - Juan 3:16</div>
+                    <img id="modalImage" class="modal-image" src="" alt="Imagen del día">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos para cada día
+        const daysData = {
+            1: {
+                title: "Día 1: La estrella más brillante",
+                message: "Holaaaaa Sarita, hoy es el primer día de este recordatorio que quise hacerte. Cada estrellita que vemos en el cielo parece pequeña desde nuestra perspectiva, pero en realidad son soles enormes que, aunque estén lejos, su luz sigue llegando a nosotros.Creo que cuando te veía, eras así: alguien que reflejaba una luz. Hasta que te empecé a conocer y me di cuenta, desde mi perspectiva, que eres como un gran sol lleno de luz. Agradezco a Dios por permitirme conocer en realidad cómo eres.Solo quería decirte que siempre seas como un sol y que no dejes de reflejar esa luz, donde sea que estés.",
+                verse: '"El Señor es mi luz y mi salvación; ¿a quién temeré? El Señor es el baluarte de mi vida; ¿quién podrá amedrentarme?" - Salmo 27:1',
+                image: "Sarai/estrellita.jpeg"
+            },
+            2: {
+                title: "Día 2: La chica más valiente",
+message: "Sarita, te admiro muchísimo. He estado contigo en el proceso de tu examen para la beca, en tus primeros días de trabajo, y pude ver todos los desafíos que enfrentas. La verdad es que eres muy valiente y esforzada: superaste muchos retos y aún sigues luchando con algunos. Conseguir tu beca y manejar una vida de trabajo y estudio que no muchos se atreven a asumir demuestra tu fortaleza. Te admiro mucho, Sarita, y quiero animarte a que nunca te rindas, recordando que todo lo puedes en Cristo que te fortalece (nuestra primera foto sjjsjs).",
+verse: '"Esfuérzate y sé valiente. No temas ni te acobardes, porque el Señor tu Dios estará contigo dondequiera que vayas." - Josué 1:9',
+image: "Sarai/saritaprimero.jpg"
+            },
+            3: {
+    title: "Día 3: La sonrisa que ilumina",
+    message: "Saritaaaaaaa, tu sonrisa tiene algo especial: no solo ilumina tu rostro(y también muy bonita), sino también a todos los que te rodean. Cada vez que te veo reír, siento que hay alegría y paz a tu alrededor. Eres capaz de transformar un momento difícil en uno lleno de esperanza y luz. Gracias por ser así de auténtica y por recordar que la alegría es un regalo que compartes sin darte cuenta.",
+    verse: '"Una alegría compartida es doble alegría; una tristeza compartida es media tristeza." - Proverbios 15:30',
+    image: "Sarai/sonrisa.jpg"
+},
+
+4: {
+    title: "Día 4: La fuerza silenciosa",
+    message: "Sarita, muchas veces no te das cuenta de la fuerza que tienes. En los momentos más complicados, aúnque aveces te estresas mantienes la calma y sigues adelante. Esa fortaleza silenciosa inspira a quienes te conocemos y a mi en lo particular me recuerda que la verdadera valentía no siempre se ve, pero siempre se siente. Sigue confiando en ti misma y en Dios que guía tus pasos.",
+    verse: '"Todo lo puedes en Cristo que te fortalece." - Filipenses 4:13',
+    image: ""
+},
+
+5: {
+    title: "Día 5: El corazón generoso",
+    message: "Saritaaa <3, admiro tu capacidad de dar sin esperar nada a cambio y no hablo en lo material sino en cada aspecto que puedas(el tiempo que invertis como profe,en ayudar y capacitar). Cada pequeño gesto tuyo demuestra bondad y amor por los demás. Tu corazón generoso deja huellas profundas en quienes te rodean, y me recuerda que el mundo necesita más personas como tú. Nunca subestimes la fuerza de un corazón que ama y comparte.",
+    verse: '"Dios ama al que da con alegría." - 2 Corintios 9:7',
+    image: "Sarai/favorito.jpg"
+},
+
+6: {
+    title: "Día 6: La inspiración que eres",
+    message: "Sarita, verte esforzarte(en muchas cosas la verdad), aprender y superarte me inspira cada día. Eres un ejemplo de perseverancia y dedicación. No importa lo que pase a tu alrededor, siempre encuentras la manera de seguir adelante y a mi eso me motiva bastante(eres increíble 💫). Gracias por enseñarme que la constancia y la fe son poderosas.",
+    verse: '"Sed fuertes y valientes; no temáis ni os acobardéis, porque el Señor vuestro Dios está con vosotros dondequiera que vayáis." - Josué 1:9',
+    image: ""
+},
+
+7: {
+    title: "Día 7: La luz que nunca se apaga",
+    message: "Sarita, tu luz interior es única y nadie puede apagarla. Cada desafío que enfrentas, cada meta que alcanzas, hace que tu brillo sea aún más fuerte. Que siempre recuerdes que eres un faro de esperanza y amor, y que tu presencia puede iluminar incluso los días más nublados de quienes te rodean,te quiero mucho Sarita,espero que te haya gustado este regalito para recordarte lo importante y compleja que eres.",
+    verse: '"No se apagará la lámpara de tu justicia; tu luz brillará eternamente." - Isaías 60:20',
+    image: "Sarai/luz.jpg"
+}
+};
+// Sistema de desbloqueo por días con fecha fija
+function initializeStars() {
+    const today = new Date();
+
+    // Fecha fija de inicio: 30 de septiembre 2025, 00:00 (hora Paraguay GMT-3)
+    const start = new Date("2025-09-30T00:00:00-03:00");
+
+    // Calcular días transcurridos
+    const diffTime = today - start;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // Desbloquear estrellas según los días transcurridos
+    for (let i = 1; i <= 7; i++) {
+        const star = document.getElementById(`star${i}`);
+        if (diffDays >= i) {
+            star.classList.remove('locked');
+            star.classList.add('unlocked');
+        } else {
+            star.classList.remove('unlocked');
+            star.classList.add('locked');
+        }
+    }
+
+    // Actualizar instrucciones
+    const instructions = document.querySelector('.instructions');
+    if (diffDays >= 7) {
+        instructions.textContent = "¡Todas las estrellas están desbloqueadas! ✨";
+    } else if (diffDays < 1) {
+        instructions.textContent = "A partir del 30 de septiembre podrás ver la primera estrella ✨";
+    } else {
+        instructions.textContent = `Día ${diffDays} de 7 - Toca las estrellas brillantes ✨`;
+    }
+}
+
+        // Crear estrellas decorativas
+        function createStars() {
+            const sky = document.getElementById('sky');
+            const starCount = 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Tamaño aleatorio entre 1 y 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Posición aleatoria
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Retraso aleatorio en la animación
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                
+                sky.appendChild(star);
+            }
+        }
+
+        // Modal functionality
+        const modalOverlay = document.getElementById('modalOverlay');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalVerse = document.getElementById('modalVerse');
+        const modalImage = document.getElementById('modalImage');
+
+        // Abrir modal cuando se hace clic en una estrella desbloqueada
+        document.querySelectorAll('.main-star').forEach(star => {
+            star.addEventListener('click', function() {
+                if (this.classList.contains('locked')) return;
+                
+                const day = this.getAttribute('data-day');
+                const data = daysData[day];
+                
+                modalTitle.textContent = data.title;
+                modalMessage.textContent = data.message;
+                modalVerse.textContent = data.verse;
+                
+                if (data.image) {
+                    modalImage.src = data.image;
+                    modalImage.style.display = 'block';
+                } else {
+                    modalImage.style.display = 'none';
+                }
+                
+                modalOverlay.classList.add('active');
+            });
+        });
+
+        // Cerrar modal
+        closeModalBtn.addEventListener('click', function() {
+            modalOverlay.classList.remove('active');
+        });
+
+        // Cerrar modal al hacer clic fuera del contenido
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+        });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                modalOverlay.classList.remove('active');
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        window.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            initializeStars();
+        });
+
+        // Prevenir zoom en dispositivos móviles
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
